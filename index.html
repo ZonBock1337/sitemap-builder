@@ -136,6 +136,10 @@
     input[type="file"] {
       display: none;
     }
+
+    .block {
+      cursor: grab;
+    }
   </style>
 </head>
 <body>
@@ -344,6 +348,12 @@
     document.addEventListener('cut', e => e.preventDefault());
     document.addEventListener('selectstart', e => e.preventDefault());
     document.addEventListener('dragstart', e => e.preventDefault());
+
+    document.querySelectorAll('.block').forEach(block => {
+    block.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('type', e.target.dataset.type);
+  });
+});
   </script>
 </body>
 </html>
