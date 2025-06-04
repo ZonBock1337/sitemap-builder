@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sitemap Builder</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #f5f5f5;
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: #1f1f1f;
+      padding: 20px;
+      border-right: 2px solid #333;
+    }
+
+    .block {
+      background-color: #2d2d2d;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      text-align: center;
+      cursor: grab;
+      transition: background 0.2s;
+    }
+
+    .block:hover {
+      background-color: #3a3a3a;
+    }
+
+    .workspace {
+      flex: 1;
+      padding: 20px;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .dropzone {
+      border: 2px dashed #444;
+      padding: 20px;
+      border-radius: 10px;
+      min-height: 90%;
+    }
+
+    .url-block {
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      position: relative;
+    }
+
+    .url-block label {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    .url-block input, .url-block select {
+      width: 100%;
+      padding: 5px;
+      background: #121212;
+      border: 1px solid #555;
+      color: #fff;
+      border-radius: 4px;
+      margin-top: 2px;
+    }
+
+    .controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 5px;
+    }
+
+    .controls button {
+      background: #333;
+      border: none;
+      color: #fff;
+      padding: 4px 6px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      background: #555;
+    }
+
+    .topbar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .export-btn, .import-btn-label {
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    .export-btn:hover, .import-btn-label:hover {
+      background: #111;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <div class="block" draggable="true" data-type="url">🌐 WebsiteURL</div>
+  </div>
+
+  <div class="workspace">
+    <div class="dropzone" id="dropzone">Ziehe hier deine WebsiteURL hin</div>
+    <div class="topbar">
+      <label for="fileInput" class="import-btn-label">📂 Importieren</label>
+      <input type="file" id="fileInput" accept=".xml" />
+      <button class="export-btn" onclick="exportXML()">💾 Exportieren</button>
+    </div>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+
+    document.querySelector('.block').addEventListener('dragstart', e => {
+      e.dataTransfer.setData('type', 'url');
+    });
+
+    dropzone.addEventListener('dragover', e => e.preventDefault());
+
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      const type = e.dataTransfer.getData('type');
+      if (type === 'url') {
+        dropzone.appendChild(createURLBlock());
+      }
+    });
+
+    function createURLBlock(data = {}) {
+      const block = document.createElement('div');
+      block.className = 'url-block';
+
+      block.innerHTML = `
+        <label>🌐 URL:
+          <input type="text" name="loc" placeholder="https://example.com" value="${data.loc || ''}">
+        </label>
+        <label>📅 Last Modified:
+          <input type="text" name="lastmod" placeholder="2025-06-04" value="${data.lastmod || ''}">
+        </label>
+        <label>🔁 Change Frequency:
+          <select name="changefreq">
+            ${generateChangefreqOptions(data.changefreq)}
+          </select>
+        </label>
+        <label>⭐ Priority:
+          <select name="priority">
+            ${generatePriorityOptions(data.priority)}
+          </select>
+        </label>
+        <div class="controls">
+          <button onclick="moveUp(this)">🔼</button>
+          <button onclick="moveDown(this)">🔽</button>
+          <button onclick="removeEntry(this)">❌</button>
+        </div>
+      `;
+      return block;
+    }
+
+    function generatePriorityOptions(selected) {
+      let options = '';
+      for (let i = 0; i <= 10; i++) {
+        const value = (i / 10).toFixed(1);
+        const isSelected = value === selected ? 'selected' : '';
+        options += `<option value="${value}" ${isSelected}>${value}</option>`;
+      }
+      return options;
+    }
+
+    function generateChangefreqOptions(selected) {
+      const values = ['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never'];
+      return values.map(v => `<option value="${v}" ${v === selected ? 'selected' : ''}>${v}</option>`).join('');
+    }
+
+    function moveUp(btn) {
+      const block = btn.closest('.url-block');
+      if (block.previousElementSibling) {
+        dropzone.insertBefore(block, block.previousElementSibling);
+      }
+    }
+
+    function moveDown(btn) {
+      const block = btn.closest('.url-block');
+      if (block.nextElementSibling) {
+        dropzone.insertBefore(block.nextElementSibling, block);
+      }
+    }
+
+    function removeEntry(btn) {
+      btn.closest('.url-block').remove();
+    }
+
+    function exportXML() {
+      const blocks = dropzone.querySelectorAll('.url-block');
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+      blocks.forEach(block => {
+        const loc = block.querySelector('input[name="loc"]').value.trim();
+        if (!loc) return;
+
+        const lastmod = block.querySelector('input[name="lastmod"]').value.trim();
+        const changefreq = block.querySelector('select[name="changefreq"]').value.trim();
+        const priority = block.querySelector('select[name="priority"]').value.trim();
+
+        xml += `  <url>\n`;
+        xml += `    <loc>${loc}</loc>\n`;
+        if (lastmod) xml += `    <lastmod>${lastmod}</lastmod>\n`;
+        if (changefreq) xml += `    <changefreq>${changefreq}</changefreq>\n`;
+        if (priority) xml += `    <priority>${priority}</priority>\n`;
+        xml += `  </url>\n`;
+      });
+
+      xml += `</urlset>`;
+
+      const blob = new Blob([xml], { type: 'application/xml' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'sitemap.xml';
+      a.click();
+    }
+
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(e.target.result, 'application/xml');
+        const urls = xml.getElementsByTagName('url');
+        dropzone.innerHTML = '';
+
+        for (let url of urls) {
+          const data = {
+            loc: url.getElementsByTagName('loc')[0]?.textContent || '',
+            lastmod: url.getElementsByTagName('lastmod')[0]?.textContent || '',
+            changefreq: url.getElementsByTagName('changefreq')[0]?.textContent || '',
+            priority: url.getElementsByTagName('priority')[0]?.textContent || '',
+          };
+          dropzone.appendChild(createURLBlock(data));
+        }
+      };
+
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>
