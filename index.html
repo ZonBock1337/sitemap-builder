@@ -352,6 +352,19 @@
     document.querySelectorAll('.block').forEach(block => {
     block.addEventListener('dragstart', e => {
     e.dataTransfer.setData('type', e.target.dataset.type);
+
+    dropzone.addEventListener('dragover', e => {
+  e.preventDefault(); // wichtig, sonst geht drop nicht
+});
+
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  const type = e.dataTransfer.getData('type');
+  if (type === 'url') {
+    dropzone.appendChild(createURLBlock());
+  }
+});
+
   });
 });
   </script>
