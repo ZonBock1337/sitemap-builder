@@ -180,7 +180,7 @@
           <input type="text" name="loc" placeholder="https://example.com" value="${data.loc || ''}">
         </label>
         <label>📅 Last Modified:
-          <input type="text" name="lastmod" placeholder="2025-06-04" value="${data.lastmod || ''}">
+          <input type="text" name="lastmod" placeholder="YYYY-MM-DD" value="${data.lastmod || new Date().toISOString().split('T')[0]}">
         </label>
         <label>🔁 Change Frequency:
           <select name="changefreq">
