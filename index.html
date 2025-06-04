@@ -3,27 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <title>Sitemap Builder</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="theme-color" content="#121212">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
-      overflow: hidden;
-      height: 100%;
-    }
-    body {
       margin: 0;
+      padding: 0;
       font-family: Arial, sans-serif;
       background-color: #121212;
       color: #f5f5f5;
-      display: flex;
-      height: 100vh;
-      webkit-user-select: none; /* Safari */
-      -moz-user-select: none;    /* Firefox */
-      -ms-user-select: none;     /* Internet Explorer/Edge */
-      user-select: none;         /* Standard */
+      height: 100%;
+      overflow: hidden;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
 
     .sidebar {
@@ -31,6 +24,8 @@
       background-color: #1f1f1f;
       padding: 20px;
       border-right: 2px solid #333;
+      height: 100vh;
+      box-sizing: border-box;
     }
 
     .block {
@@ -51,8 +46,8 @@
     .workspace {
       flex: 1;
       padding: 20px;
-      position: relative;
       overflow-y: auto;
+      position: relative;
     }
 
     .dropzone {
@@ -77,7 +72,8 @@
       font-size: 14px;
     }
 
-    .url-block input, .url-block select {
+    .url-block input,
+    .url-block select {
       width: 100%;
       padding: 5px;
       background: #121212;
@@ -136,29 +132,63 @@
     input[type="file"] {
       display: none;
     }
+
+    .app {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    .a2hs-banner {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
-    <div class="block" draggable="true" data-type="url">🌐 WebsiteURL</div>
-  </div>
+  <div class="app">
+    <div class="sidebar">
+      <div class="block" draggable="true" data-type="url">🌐 WebsiteURL</div>
+    </div>
 
-  <div class="workspace">
-    <div class="dropzone" id="dropzone">Drag & Drop your Blocks here! [If you on mobile you can add it as app!]</div>
-    <div class="topbar">
-      <label for="fileInput" class="import-btn-label">📂 Import</label>
-      <input type="file" id="fileInput" accept=".xml" />
-      <button class="export-btn" onclick="exportXML()">💾 Export</button>
+    <div class="workspace">
+      <div class="dropzone" id="dropzone">Drag & Drop your Blocks here!</div>
+      <div class="topbar">
+        <label for="fileInput" class="import-btn-label">📂 Import</label>
+        <input type="file" id="fileInput" accept=".xml" />
+        <button class="export-btn" onclick="exportXML()">💾 Export</button>
+      </div>
     </div>
   </div>
+
+  <div class="a2hs-banner" id="a2hsBanner">For a better experience, please add this app to your home screen.</div>
 
   <script>
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
 
-    document.querySelector('.block').addEventListener('dragstart', e => {
-      e.dataTransfer.setData('type', 'url');
+    document.querySelectorAll('.block').forEach(block => {
+      block.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('type', e.target.dataset.type);
+      });
+
+      block.addEventListener('touchstart', e => {
+        const type = e.target.dataset.type;
+        const clone = createURLBlock();
+        dropzone.appendChild(clone);
+      });
     });
 
     dropzone.addEventListener('dragover', e => e.preventDefault());
@@ -175,12 +205,14 @@
       const block = document.createElement('div');
       block.className = 'url-block';
 
+      const today = new Date().toISOString().split('T')[0];
+
       block.innerHTML = `
         <label>🌐 URL:
           <input type="text" name="loc" placeholder="https://example.com" value="${data.loc || ''}">
         </label>
         <label>📅 Last Modified:
-          <input type="text" name="lastmod" placeholder="YYYY-MM-DD" value="${data.lastmod || new Date().toISOString().split('T')[0]}">
+          <input type="text" name="lastmod" placeholder="YYYY-MM-DD" value="${data.lastmod || today}">
         </label>
         <label>🔁 Change Frequency:
           <select name="changefreq">
@@ -288,62 +320,24 @@
       reader.readAsText(file);
     });
 
-    // PWA Install Banner (only on mobile, not standalone)
-    let deferredPrompt;
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-
-      if (isMobile() && !isInStandaloneMode()) {
-        showInstallBanner();
-      }
-    });
-
-    function showInstallBanner() {
-      const banner = document.createElement('div');
-      banner.textContent = 'For a better experience, please add this app to your homescreen.';
-      banner.style.position = 'fixed';
-      banner.style.bottom = '0';
-      banner.style.left = '0';
-      banner.style.right = '0';
-      banner.style.background = '#222';
-      banner.style.color = '#fff';
-      banner.style.padding = '15px';
-      banner.style.textAlign = 'center';
-      banner.style.zIndex = '1000';
-      banner.style.cursor = 'pointer';
-
-      banner.onclick = () => {
-        banner.remove();
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-        }
-      };
-
-      document.body.appendChild(banner);
-    }
-
-    function isMobile() {
-      return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    }
-
-    function isInStandaloneMode() {
-      return (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true);
-    }
-
-    // Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(reg => console.log('Service Worker registered.', reg))
-        .catch(err => console.error('Service Worker failed:', err));
-    }
-
+    // Kopierschutz
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('copy', e => e.preventDefault());
     document.addEventListener('cut', e => e.preventDefault());
     document.addEventListener('selectstart', e => e.preventDefault());
-    document.addEventListener('dragstart', e => e.preventDefault());
+    document.addEventListener('dragstart', e => {
+      if (!e.target.classList.contains('block')) e.preventDefault();
+    });
+
+    // Add-to-home-screen Hinweis nur auf Mobilgeräten
+    window.addEventListener('load', () => {
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        const banner = document.getElementById('a2hsBanner');
+        banner.style.display = 'block';
+        setTimeout(() => banner.style.display = 'none', 10000);
+      }
+    });
   </script>
 </body>
 </html>
