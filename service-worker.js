@@ -1,11 +1,22 @@
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
+self.addEventListener("install", e => {
+  e.waitUntil(
+    caches.open("sitemap-builder").then(cache => {
+      return cache.addAll([
+        "/",
+        "/index.html",
+        "/manifest.json",
+        "/icon-192.png",
+        "/icon-512.png"
+        // Füge hier weitere Assets hinzu, wenn nötig
+      ]);
+    })
+  );
 });
 
-self.addEventListener('activate', (event) => {
-  console.log('Service Worker activated');
-});
-
-self.addEventListener('fetch', (event) => {
-  // No caching; passthrough only
+self.addEventListener("fetch", e => {
+  e.respondWith(
+    caches.match(e.request).then(response => {
+      return response || fetch(e.request);
+    })
+  );
 });
