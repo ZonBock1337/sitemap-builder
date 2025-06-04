@@ -321,13 +321,7 @@
     });
 
     // Kopierschutz
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('copy', e => e.preventDefault());
-    document.addEventListener('cut', e => e.preventDefault());
-    document.addEventListener('selectstart', e => e.preventDefault());
-    document.addEventListener('dragstart', e => {
-      if (!e.target.classList.contains('block')) e.preventDefault();
-    });
+
 
     // Add-to-home-screen Hinweis nur auf Mobilgeräten
     window.addEventListener('load', () => {
