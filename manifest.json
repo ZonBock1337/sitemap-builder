@@ -1,6 +1,6 @@
 {
   "name": "Sitemap Builder",
-  "short_name": "SP Builder",
+  "short_name": "Sitemap Builder",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#121212",
